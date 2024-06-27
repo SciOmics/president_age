@@ -1,0 +1,101 @@
+---
+title: "Election Age Analysis"
+format: html
+---
+
+```{r}
+
+library(dplyr)
+library(ggplot2)
+
+```
+
+# Read in data
+```{r}
+
+#data
+df = read.csv("Presidental_Election_Candidates_Age.csv")
+
+#fix column data types
+df = df |> 
+    mutate(across(c("Party_Affiliation", "Elected"), as.factor))
+
+```
+
+# Age vs. Election Year
+```{r}
+
+#Histogram of ages
+#png(filename = "./plots/age_histogram.png", res = 200, height = 600, width = 900)
+df |> 
+    ggplot(aes(x = Age)) +
+        geom_histogram(fill = "black", bins = 15) +
+        labs(title = "Age Distribution of Presidental Candidates") +
+        theme_classic()
+#dev.off()
+
+#Plot of age vs election year
+#png(filename = "./plots/age_by_year.png", res = 200, height = 600, width = 1400)
+df |> 
+    ggplot(aes(x = Election_Year, y = Age)) +
+        geom_point(aes(color = Party_Affiliation)) +
+        labs(x = "Election Year", y = "Age of Candidates", color = "Candidate\nParty Affiliation", title = "Age of Presidential Nominees") +
+        lims(y = c(35, 100)) +
+        scale_color_manual(values = c("blue", "purple", "cyan", "magenta", "red", "orange", "black")) +
+        geom_smooth(method = "loess", span = 1, se = FALSE, color = "black", linetype = "dashed") +
+        theme_classic()
+#dev.off()
+
+#Plot filtered to only elected presidents
+#png(filename = "./plots/age_by_year_elected.png", res = 200, height = 600, width = 1100)
+df |> 
+    dplyr::filter(Elected == "Yes") |> 
+    ggplot(aes(x = Election_Year, y = Age)) +
+        geom_point() +
+        labs(x = "Election Year", y = "Age of Candidates", title = "Age of Elected Presidents") +
+        lims(y = c(35, 100)) +
+        geom_smooth(method = "loess", span = 1, se = FALSE, color = "black", linetype = "dashed") +
+        theme_classic()
+#dev.off()
+
+```
+
+# Paired Analysis
+```{r}
+
+
+#Create paired data frame
+paired_df = df |> 
+    dplyr::select(!c("Nominee", "Birth_Year", "Party_Affiliation")) |> 
+    dplyr::filter(Elected != "NA") |> 
+    tidyr::pivot_wider(names_from = "Elected", values_from = "Age") |> 
+    mutate(age_diff = Yes - No)
+
+#Paired t-test
+t.test(x = paired_df$Yes, y = paired_df$No, paired = TRUE)
+
+#Plot comparing age of elected vs non-elected
+df |> 
+    dplyr::filter(Elected != "NA") |> 
+    ggplot(aes(x = Elected, y = Age)) +
+        geom_jitter(width = 0.1) +
+        #geom_line(aes(group = Election_Year)) +
+        theme_classic()
+
+#Plot of age differences in elected vs. non-elected candidates
+png(filename = "./plots/paired_age_difference.png", res = 200, height = 800, width = 800)
+paired_df |> 
+    ggplot(aes(x = 1, y = age_diff)) +
+        geom_jitter(width = 0.15) +
+        geom_hline(yintercept = 0, linetype = "dashed") +
+        lims(x = c(0,2)) +
+        labs(x = "", y = "Age Difference (Years)", title = "Age Difference of\nElected and Defeated Candidates") +
+        theme_classic() +
+        theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+dev.off()
+
+
+```
+
