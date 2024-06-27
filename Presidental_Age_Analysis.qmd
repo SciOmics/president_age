@@ -14,7 +14,7 @@ library(ggplot2)
 ```{r}
 
 #data
-df = read.csv("Presidental_Election_Candidates_Age.csv")
+df = read.csv("./data/Presidential_Election_Candidates.csv")
 
 #fix column data types
 df = df |> 
