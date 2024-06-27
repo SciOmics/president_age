@@ -46,6 +46,21 @@ df |>
         theme_classic()
 #dev.off()
 
+#Plot of ages with median population age
+#png(filename = "./plots/age_by_year_w_population.png", res = 200, height = 600, width = 1100)
+df |> 
+    ggplot(aes(x = Election_Year, y = Age)) +
+        geom_point() +
+        annotate(geom = "text", x = 1800, y = 73, label = "Nominee\nAges") +
+        geom_line(aes(y = USA_Median_Age)) +
+        annotate(geom = "text", x = 1800, y = 20, label = "Median\nPopulation\nAge") +
+        labs(x = "Election Year", y = "Age of Candidates", title = "Age of Presidential Nominees") +
+        lims(y = c(10, 100)) +
+        #scale_color_manual(values = c("blue", "purple", "cyan", "magenta", "red", "orange", "black")) +
+        geom_smooth(method = "loess", span = 1, se = FALSE, color = "black", linetype = "dashed") +
+        theme_classic()
+#dev.off()
+
 #Plot filtered to only elected presidents
 #png(filename = "./plots/age_by_year_elected.png", res = 200, height = 600, width = 1100)
 df |> 
@@ -66,7 +81,7 @@ df |>
 
 #Create paired data frame
 paired_df = df |> 
-    dplyr::select(!c("Nominee", "Birth_Year", "Party_Affiliation")) |> 
+    dplyr::select(!c("Nominee", "Birth_Year", "Party_Affiliation", "USA_Median_Age")) |> 
     dplyr::filter(Elected != "NA") |> 
     tidyr::pivot_wider(names_from = "Elected", values_from = "Age") |> 
     mutate(age_diff = Yes - No)
